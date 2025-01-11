@@ -1,0 +1,24 @@
+# Python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+.env
+.venv
+env/
+venv/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Project specific
+conversation_history.json
+# assets/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+*.env
