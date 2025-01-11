@@ -5,5 +5,4 @@ qrcode
 requests
 python-dotenv
 # Email requirements
-smtplib
 email
