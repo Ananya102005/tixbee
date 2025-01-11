@@ -12,6 +12,7 @@ def send_booking_confirmation(user_email, booking_details):
         Thank you for booking with TixBee! Here are your booking details:
 
         🎫 Booking ID: {booking_details.get('booking_id', 'Unknown')}
+        🌆 City: {booking_details.get('city', 'Unknown')}
         🏰 Attraction: {booking_details.get('attraction', 'Unknown')}
         📅 Visit Date: {booking_details.get('visit_date', 'Unknown')}
         🎟️ Tickets: {booking_details.get('ticket_count', 'Unknown')}

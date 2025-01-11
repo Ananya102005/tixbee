@@ -21,6 +21,7 @@ class EmailService:
         qr_data = f"""
         Visitor Name: {booking_details['customer_name']}
         Booking ID: {booking_details['booking_id']}
+        City: {booking_details['city']}
         Attraction: {booking_details['attraction']}
         Visit Date: {booking_details['visit_date']}
         Tickets: {booking_details['ticket_count']}
@@ -58,6 +59,7 @@ class EmailService:
         qr_data = f"""
         Visitor Name: {booking_details['customer_name']}
         Booking ID: {booking_details['booking_id']}
+        City: {booking_details['city']}
         Attraction: {booking_details['attraction']}
         Visit Date: {formatted_date}
         Tickets: {booking_details['ticket_count']}
@@ -82,6 +84,10 @@ class EmailService:
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;">Booking ID</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{booking_details['booking_id']}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">City</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{booking_details['city']} </td>
                     </tr>
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;">Attraction</td>
@@ -204,44 +210,3 @@ class EmailService:
             print(f"Error creating QR code: {str(e)}")
             return None
 
-# Example usage:
-"""
-booking_details = {
-    'booking_id': 'TIX' + datetime.now().strftime('%Y%m%d%H%M%S'),
-    'customer_name': 'John Doe',
-    'attraction': 'Bangalore Palace',
-    'visit_date': '2024-03-20',
-    'ticket_count': '2 Adults, 1 Child',
-    'amount': '1500'
-}
-
-email_service = EmailService()
-success, message = email_service.send_confirmation_email(
-    booking_details,
-    'recipient@example.com'
-)
-print(message)
-"""
-
-# Test the email service
-if __name__ == "__main__":
-    # Test booking details
-    test_booking = {
-        'booking_id': 'TIX' + datetime.now().strftime('%Y%m%d%H%M%S'),
-        'customer_name': 'Test User',
-        'attraction': 'Bangalore Palace',
-        'visit_date': '2024-03-20',
-        'ticket_count': '2 Adults, 1 Child',
-        'amount': '1500'
-    }
-    
-    # Initialize email service
-    email_service = EmailService()
-    
-    # Send test email
-    success, message = email_service.send_confirmation_email(
-        test_booking,
-        "bbucky117@gmail.com"  # Replace this with your actual email address
-    )
-    
-    print(message)

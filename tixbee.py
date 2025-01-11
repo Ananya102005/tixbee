@@ -36,6 +36,7 @@ def get_upi_qr(amount, upi_id="arupiop@axl", name="TixBee", user_email=None, boo
             email_booking_details = {
                 'booking_id': 'TIX' + datetime.now().strftime('%Y%m%d%H%M%S'),
                 'customer_name': booking_details['name'],
+                'city': booking_details['city'],
                 'attraction': booking_details['attraction'],
                 'visit_date': booking_details['visit_date'],
                 'ticket_count': booking_details['ticket_count'],
@@ -164,6 +165,7 @@ def get_upi_qr(amount, upi_id="arupiop@axl", name="TixBee", user_email=None, boo
                     email_booking_details = {
                         'booking_id': 'TIX' + datetime.now().strftime('%Y%m%d%H%M%S'),
                         'customer_name': booking_details['name'],  # This comes from chat input
+                        'city': booking_details['city'],
                         'attraction': booking_details['attraction'],
                         'visit_date': booking_details['visit_date'],
                         'ticket_count': booking_details['ticket_count'],
@@ -236,12 +238,16 @@ def extract_booking_details(response_text):
 
         # Get name directly from session state
         user_name = st.session_state.get('user_name', 'User')
-        print(f"Retrieved user name from session: {user_name}")  # Debug print
+
+        # Extract city and attraction
+        city_match = re.search(r'🌆 City: (.+?)\n', response_text)
+        city = city_match.group(1).strip() if city_match else None
 
         return {
             'user_email': user_email,
             'booking_details': {
-                'name': user_name,  # Use the stored name
+                'name': user_name,
+                'city': city,  # Added city
                 'attraction': re.search(r'🏰 Attraction: (.+?)\n', response_text).group(1).strip(),
                 'visit_date': re.search(r'📅 Visit Date: (.+?)\n', response_text).group(1).strip(),
                 'ticket_count': re.search(r'🎟️ Tickets Booked:(.*?)💰', response_text, re.DOTALL).group(1).strip(),
@@ -288,12 +294,10 @@ current_date_str = current_date.strftime("%Y-%m-%d")
 initial_prompt = f"""You are TixBee, a friendly ticket booking assistant. You are aware that today is {current_day}, {current_date_str}. Follow this conversation flow STRICTLY in order:
 
 1. First, just greet and ask for the user's name
-2. Then ask which city they would like to visit
-3. If they mention any city other than Bengaluru, respond: "I wish I could help you explore [city name]! Right now, I can only book tickets in Bengaluru, but we're working on adding more cities soon. Would you like to discover some amazing places in Bengaluru instead?"
-4. Once they agree to Bengaluru, show them these options in this exact format:
+2. Then ask which city they would like to visit (Bengaluru, Delhi, Mumbai, or Kolkata)
+3. Based on their city choice, show these options:
 
-Here are the amazing places you can visit in Bengaluru:
-
+For Bengaluru:
 a) Bangalore Palace
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    A magnificent palace with Tudor-style architecture,
@@ -314,9 +318,106 @@ d) Bannerghatta National Park
    A wildlife sanctuary offering exciting safari experiences
    and a chance to see animals in their natural habitat.
 
-Which place would you like to visit?
+For Delhi:
+a) Red Fort
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   A historic fortress complex showcasing Mughal architecture,
+   featuring stunning palaces and gardens.
 
-5. If user selects anything other than these 4 options, say: "I apologize, but I can only process bookings for the listed attractions (a/b/c/d). Please choose one of these options."
+b) Qutub Minar
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   A UNESCO World Heritage site featuring the world's
+   tallest brick minaret and ancient Indian architecture.
+
+c) National Science Centre
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   An interactive science museum with engaging exhibits
+   and hands-on learning experiences.
+
+d) National Zoological Park
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   A 176-acre zoo housing diverse wildlife species
+   in naturalistic habitats.
+
+For Mumbai:
+a) Gateway of India
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   An iconic arch monument built in the Indo-Saracenic style,
+   overlooking the Arabian Sea.
+
+b) Elephanta Caves
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Ancient cave temples on Elephanta Island featuring
+   stunning rock-cut sculptures.
+
+c) Nehru Science Centre
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   India's largest interactive science center with
+   over 500 hands-on exhibits.
+
+d) Sanjay Gandhi National Park
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   A protected area in Mumbai featuring rich biodiversity,
+   ancient caves, and a mini-train safari.
+
+For Kolkata:
+a) Victoria Memorial
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   A magnificent marble building dedicated to Queen Victoria,
+   housing a museum and surrounded by gardens.
+
+b) Indian Museum
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   The oldest and largest museum in India featuring rare
+   artifacts, antiques, and Egyptian mummies.
+
+c) Science City
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   India's largest science center with Space Theatre,
+   Evolution Park, and Maritime Centre.
+
+d) Alipore Zoological Gardens
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   India's oldest formally stated zoological park,
+   home to rare species and beautiful gardens.
+
+4. For attraction selection, accept any of these formats:
+   - Just the letter (a/b/c/d)
+   - Full name of attraction (e.g., "Red Fort" or "Victoria Memorial")
+   - Partial name (e.g., "fort", "memorial", "museum", "zoo")
+   - Letter with name (e.g., "a - Red Fort" or "b. Qutub")
+
+   Match user input flexibly:
+   
+   For Bengaluru:
+   - Option A: Accept "a", "palace", "bangalore palace"
+   - Option B: Accept "b", "lalbagh", "botanical", "garden"
+   - Option C: Accept "c", "visvesvaraya", "museum", "technological"
+   - Option D: Accept "d", "bannerghatta", "national park", "safari"
+
+   For Delhi:
+   - Option A: Accept "a", "red fort", "fort", "lal qila"
+   - Option B: Accept "b", "qutub", "minar", "qutab"
+   - Option C: Accept "c", "science", "national science"
+   - Option D: Accept "d", "zoo", "zoological", "national zoo"
+
+   For Mumbai:
+   - Option A: Accept "a", "gateway", "gateway of india"
+   - Option B: Accept "b", "elephanta", "caves"
+   - Option C: Accept "c", "nehru", "science centre"
+   - Option D: Accept "d", "sanjay gandhi", "national park"
+
+   For Kolkata:
+   - Option A: Accept "a", "victoria", "memorial"
+   - Option B: Accept "b", "indian museum", "museum"
+   - Option C: Accept "c", "science city", "science"
+   - Option D: Accept "d", "alipore", "zoo", "zoological"
+
+5. If the user's input doesn't match any of these patterns, respond:
+   "I'm not sure which attraction you mean. Could you please either:
+   - Use the letter (a/b/c/d)
+   - Type the attraction name
+   - Or describe which place you're interested in?"
 
 6. After they choose a valid place, ask for their preferred date of visit. When processing date:
    - If user says "today", use {current_date_str}
@@ -358,6 +459,7 @@ Thank you for providing your email! Here's your booking summary: 📋
 Booking Details:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+    🌆 City: [Selected City]
     🏰 Attraction: [Selected Place]
     📅 Visit Date: [Chosen Date]
     
@@ -488,6 +590,7 @@ elif st.session_state['current_state'] == 'PAYMENT':
             user_email=st.session_state['user_email'],
             booking_details={
                 'name': st.session_state['user_name'],
+                'city': selected_city,
                 'attraction': selected_attraction,
                 'visit_date': selected_date,
                 'ticket_count': f"{adult_tickets} Adults, {child_tickets} Children",
@@ -505,6 +608,10 @@ child_tickets = 0
 for message in st.session_state['messages']:
     if message['role'] == 'assistant' and 'Total Amount: ₹' in message['content']:
         total_amount = extract_amount(message['content'])
+        if message['role'] == 'assistant' and '🏰 City:' in message['content']:
+            match = re.search(r'🌆 City: (.+?)\n', message['content'])
+            if match:
+                selected_city = match.group(1)
     if message['role'] == 'assistant' and '🏰 Attraction:' in message['content']:
         match = re.search(r'🏰 Attraction: (.+?)\n', message['content'])
         if match:
