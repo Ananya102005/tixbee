@@ -10,8 +10,8 @@ from datetime import datetime
 class EmailService:
     def __init__(self):
         # Email configuration
-        self.sender_email = st.secrets["EMAIL_USERNAME"]  # Replace with your Gmail
-        self.sender_password = st.secrets["EMAIL_PASSWORD"]   # Replace with your app password
+        self.sender_email = st.secrets["EMAIL_USERNAME"]  # Gmail
+        self.sender_password = st.secrets["EMAIL_PASSWORD"]   #app password
         self.smtp_server = st.secrets["EMAIL_HOST"]
         self.smtp_port = int(st.secrets["EMAIL_PORT"])
 
@@ -209,4 +209,3 @@ class EmailService:
         except Exception as e:
             print(f"Error creating QR code: {str(e)}")
             return None
-
