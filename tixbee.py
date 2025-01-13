@@ -26,6 +26,10 @@ st.set_page_config(
     layout="centered"
 )
 
+# Add this to your session state initialization
+if 'timer_completed' not in st.session_state:
+    st.session_state['timer_completed'] = False
+
 def get_upi_qr(amount, upi_id="arupiop@axl", name="TixBee", user_email=None, booking_details=None):
     try:
         print(f"Received booking details: {booking_details}")
@@ -140,63 +144,70 @@ def get_upi_qr(amount, upi_id="arupiop@axl", name="TixBee", user_email=None, boo
         # Using use_container_width instead of use_column_width
         st.image(img_byte_arr, use_container_width=False, width=400)
 
-        # Add timer and confirmation message
-        timer_placeholder = st.empty()
-        email_placeholder = st.empty()
-        final_message_placeholder = st.empty()
-        
-        # Initialize email service
-        email_service = EmailService()
-        
-        for secs in range(10, -1, -1):
-            if secs > 0:
-                timer_placeholder.markdown(f"""
-                    <div style="text-align: center; padding: 10px; color: #666;">
-                        Payment window closes in {secs} seconds...
-                    </div>
-                """, unsafe_allow_html=True)
-                time.sleep(1)
-            else:
-                # Clear the timer
-                timer_placeholder.empty()
-                
-                if user_email and booking_details:
-                    # Prepare complete booking details with user's name from chat
-                    email_booking_details = {
-                        'booking_id': 'TIX' + datetime.now().strftime('%Y%m%d%H%M%S'),
-                        'customer_name': booking_details['name'],  # This comes from chat input
-                        'city': booking_details['city'],
-                        'attraction': booking_details['attraction'],
-                        'visit_date': booking_details['visit_date'],
-                        'ticket_count': booking_details['ticket_count'],
-                        'amount': amount
-                    }
+        # Only run timer if it hasn't completed before
+        if not st.session_state['timer_completed']:
+            timer_placeholder = st.empty()
+            email_placeholder = st.empty()
+            final_message_placeholder = st.empty()
+            
+            # Initialize email service
+            email_service = EmailService()
+            
+            for secs in range(10, -1, -1):
+                if secs > 0:
+                    timer_placeholder.markdown(f"""
+                        <div style="text-align: center; padding: 10px; color: #666;">
+                            Payment window closes in {secs} seconds...
+                        </div>
+                    """, unsafe_allow_html=True)
+                    time.sleep(1)
+                else:
+                    # Clear the timer
+                    timer_placeholder.empty()
                     
-                    # Send confirmation email with user's name
-                    success, message = email_service.send_confirmation_email(
-                        email_booking_details,
-                        user_email
-                    )
+                    if user_email and booking_details:
+                        # Prepare complete booking details with user's name from chat
+                        email_booking_details = {
+                            'booking_id': 'TIX' + datetime.now().strftime('%Y%m%d%H%M%S'),
+                            'customer_name': booking_details['name'],  # This comes from chat input
+                            'city': booking_details['city'],
+                            'attraction': booking_details['attraction'],
+                            'visit_date': booking_details['visit_date'],
+                            'ticket_count': booking_details['ticket_count'],
+                            'amount': amount
+                        }
+                        
+                        # Send confirmation email with user's name
+                        success, message = email_service.send_confirmation_email(
+                            email_booking_details,
+                            user_email
+                        )
+                        
+                        # Show email status
+                        with email_placeholder.container():
+                            if success:
+                                col1, col2 = st.columns([1, 20])
+                                with col1:
+                                    st.markdown("✅")
+                                with col2:
+                                    st.success("Email Sent Successfully!")
+                                
+                                st.info("""
+                                    We've sent your payment confirmation and booking details to your registered email address.
+                                    Please check your inbox (and spam folder) for the confirmation email.
+                                """)
+                            else:
+                                st.error(f"Failed to send email: {message}")
                     
-                    # Show email status
-                    with email_placeholder.container():
-                        if success:
-                            col1, col2 = st.columns([1, 20])
-                            with col1:
-                                st.markdown("✅")
-                            with col2:
-                                st.success("Email Sent Successfully!")
-                            
-                            st.info("""
-                                We've sent your payment confirmation and booking details to your registered email address.
-                                Please check your inbox (and spam folder) for the confirmation email.
-                            """)
-                        else:
-                            st.error(f"Failed to send email: {message}")
-                
-                # Show final thank you message
-                final_message_placeholder.markdown("Thanks for choosing TixBee! We look forward to serving you soon! 🎫")
-                break
+                    # Mark timer as completed
+                    st.session_state['timer_completed'] = True
+                    
+                    # Show final thank you message
+                    final_message_placeholder.markdown("Thanks for choosing TixBee! We look forward to serving you soon! 🎫")
+                    break
+        else:
+            # If timer already completed, just show the final message
+            st.markdown("Thanks for choosing TixBee! We look forward to serving you soon! 🎫")
 
         return None
 
