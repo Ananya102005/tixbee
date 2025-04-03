@@ -1,6 +1,7 @@
 # TixBee
 
 TixBee is a friendly chatbot designed to assist users in booking tickets for various attractions in Bengaluru. The chatbot guides users through the booking process, providing information about attractions, pricing, and generating QR codes for payment.
+Live link: https://tixbee777.streamlit.app/
 
 ## Features
 
