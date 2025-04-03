@@ -29,7 +29,6 @@ st.set_page_config(
 # Add this to your session state initialization
 if 'timer_completed' not in st.session_state:
     st.session_state['timer_completed'] = False
-
 def get_upi_qr(amount, upi_id="arupiop@axl", name="TixBee", user_email=None, booking_details=None):
     try:
         print(f"Received booking details: {booking_details}")
